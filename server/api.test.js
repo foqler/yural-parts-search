@@ -11,7 +11,7 @@ afterEach(async () => {
   )
 })
 
-async function request(path, key = '') {
+async function request(path, key) {
   const app = express()
   app.use('/api', createApiRouter(key))
   const server = app.listen(0, '127.0.0.1')
@@ -39,9 +39,22 @@ async function request(path, key = '') {
   })
 }
 
-it('сообщает о демо-режиме без раскрытия ключа', async () => {
-  expect(await request('/api/config')).toEqual({ status: 200, data: { demo: true } })
+it('сообщает о режиме работы без раскрытия ключа', async () => {
+  expect(await request('/api/config')).toEqual({ status: 200, data: { demo: false } })
+  expect(await request('/api/config', '')).toEqual({ status: 200, data: { demo: true } })
   expect(await request('/api/config', 'secret')).toEqual({ status: 200, data: { demo: false } })
+})
+
+it('без настройки ключа обращается к Favorit Parts с публичным ключом из документации', async () => {
+  const goods = [{ brand: 'FEBI', number: '01089' }]
+  const fetch = vi.fn().mockResolvedValue(Response.json({ goods }))
+  vi.stubGlobal('fetch', fetch)
+
+  expect(await request('/api/search?number=01089')).toEqual({ status: 200, data: { goods } })
+  expect(fetch).toHaveBeenCalledOnce()
+  expect(new URL(fetch.mock.calls[0][0]).searchParams.get('key')).toBe(
+    '00000000-0000-0000-0000-000000000001',
+  )
 })
 
 it('проверяет артикул перед обращением к внешнему API', async () => {
@@ -51,17 +64,17 @@ it('проверяет артикул перед обращением к вне�
 })
 
 it('демо проходит оба этапа через HTTP с вложенными аналогами', async () => {
-  const brands = await request('/api/search?number=01089')
+  const brands = await request('/api/search?number=01089', '')
   expect(brands.status).toBe(200)
   expect(brands.data.goods.map((item) => item.brand)).toEqual(['FEBI', 'SWAG'])
-  const offers = await request('/api/search?number=01089&brand=FEBI')
+  const offers = await request('/api/search?number=01089&brand=FEBI', '')
   expect(offers.status).toBe(200)
   expect(offers.data.goods).toHaveLength(1)
   expect(offers.data.goods[0].analogues.length).toBeGreaterThan(0)
 })
 
 it('неизвестный артикул в демо возвращает пустую структуру из документации', async () => {
-  const response = await request('/api/search?number=UNKNOWN')
+  const response = await request('/api/search?number=UNKNOWN', '')
   expect(response).toEqual({ status: 200, data: { goods: [{}] } })
 })
 

@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { searchParts } from './favorit.js'
 import { searchDemo } from './demo.js'
 
-export function createApiRouter(key = '') {
+export function createApiRouter(key = '00000000-0000-0000-0000-000000000001') {
   const router = Router()
 
   router.use((request, response, next) => {
