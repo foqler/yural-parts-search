@@ -7,16 +7,19 @@ export async function searchParts({ key, number, brand }) {
     url.searchParams.set('analogues', 'on')
   }
 
-  let response
+  const signal = AbortSignal.timeout(12000)
+  let response, data
   try {
-    response = await fetch(url, { signal: AbortSignal.timeout(12000), redirect: 'error' })
+    response = await fetch(url, { signal, redirect: 'error' })
+    data = await response.json().catch((error) => {
+      if (error.name === 'SyntaxError') return null
+      throw error
+    })
   } catch (error) {
-    if (error.name === 'TimeoutError')
+    if (signal.aborted || error.name === 'TimeoutError')
       throw new Error('Сервис не ответил вовремя. Попробуйте ещё раз.')
     throw new Error('Не удалось связаться с Favorit Parts. Попробуйте ещё раз.')
   }
-
-  const data = await response.json().catch(() => null)
 
   if (data?.error) {
     const message = String(data.error)

@@ -81,3 +81,14 @@ it('читает причину ошибки из JSON при HTTP 403', async (
     'Ключ API недействителен',
   )
 })
+
+it('распознаёт таймаут при загрузке тела ответа', async () => {
+  const body = new ReadableStream({
+    start(controller) {
+      controller.error(new DOMException('Timed out', 'TimeoutError'))
+    },
+  })
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(body)))
+
+  await expect(searchParts({ key: 'test', number: '123' })).rejects.toThrow('не ответил вовремя')
+})

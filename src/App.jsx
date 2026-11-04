@@ -1,22 +1,40 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useGetBrandsQuery, useGetConfigQuery, useGetOffersQuery } from './api/partsApi'
+import { useGetBrandsQuery, useGetConfigQuery } from './api/partsApi'
 import { brandSelected, numberChanged } from './store/searchSlice'
 import { ErrorMessage, Loader } from './components/Feedback'
-import OffersTable from './components/OffersTable'
 import SearchForm from './components/SearchForm'
 import BrandSelector from './components/BrandSelector'
-import EmptyState from './components/EmptyState'
+import SearchResults from './components/SearchResults'
 
 export default function App() {
+  const config = useGetConfigQuery()
+
+  if (!config.data) {
+    return (
+      <main className="mx-auto max-w-lg px-5 py-16">
+        {config.isError ? (
+          <ErrorMessage error={config.error} onRetry={config.refetch} />
+        ) : (
+          <Loader>Подключаем каталог…</Loader>
+        )}
+      </main>
+    )
+  }
+
+  return <SearchPage demo={config.data.demo} />
+}
+
+function SearchPage({ demo }) {
   const dispatch = useDispatch()
   const { number, brand } = useSelector((state) => state.search)
   const [debouncedNumber, setDebouncedNumber] = useState('')
   const query = number.trim()
   const waiting = query !== debouncedNumber
-  const config = useGetConfigQuery()
-  const brands = useGetBrandsQuery(debouncedNumber, { skip: !query || waiting })
-  const offers = useGetOffersQuery({ number: query, brand }, { skip: !brand || waiting })
+  const brands = useGetBrandsQuery(debouncedNumber, {
+    skip: !query || waiting,
+    refetchOnMountOrArgChange: true,
+  })
   const manufacturers = !waiting && query ? brands.currentData : undefined
 
   useEffect(() => {
@@ -27,6 +45,7 @@ export default function App() {
   function searchNow(event) {
     event.preventDefault()
     if (!query) return
+    dispatch(brandSelected(''))
     if (query === debouncedNumber && !brands.isUninitialized) brands.refetch()
     else setDebouncedNumber(query)
   }
@@ -49,7 +68,7 @@ export default function App() {
               Каталог запчастей
             </span>
           </a>
-          {config.data?.demo && (
+          {demo && (
             <span className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
               Демо-режим
@@ -85,7 +104,7 @@ export default function App() {
           </div>
         </div>
 
-        {config.data?.demo && (
+        {demo && (
           <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200/70 bg-amber-50/70 px-4 py-3 text-xs leading-relaxed text-amber-900">
             <span aria-hidden="true" className="mt-0.5 font-mono font-bold">
               i
@@ -100,7 +119,7 @@ export default function App() {
               number={number}
               onChange={(value) => dispatch(numberChanged(value))}
               onSubmit={searchNow}
-              demo={config.data?.demo}
+              demo={demo}
             />
 
             <BrandSelector
@@ -115,31 +134,11 @@ export default function App() {
           </aside>
 
           <div className="min-w-0">
-            {brand && !waiting ? (
-              offers.isFetching ? (
-                <div className="rounded-2xl border border-slate-200 bg-white py-20">
-                  <Loader>Загружаем предложения…</Loader>
-                </div>
-              ) : offers.isError ? (
-                <ErrorMessage error={offers.error} onRetry={offers.refetch} />
-              ) : offers.currentData?.length ? (
-                <OffersTable offers={offers.currentData} brand={brand} number={query} />
-              ) : (
-                <EmptyState
-                  title="Предложений пока нет"
-                  text="Для выбранного производителя ничего не найдено. Попробуйте другой бренд или артикул."
-                />
-              )
-            ) : (
-              <EmptyState
-                title={manufacturers?.length ? 'Выберите производителя' : 'Начните с артикула'}
-                text={
-                  manufacturers?.length
-                    ? 'Один номер может встречаться у разных брендов. Выберите нужный бренд — покажем предложения и аналоги.'
-                    : 'Здесь появятся найденные детали, цены и доступное количество на каждом складе.'
-                }
-              />
-            )}
+            <SearchResults
+              number={query}
+              brand={brand}
+              hasManufacturers={!!manufacturers?.length}
+            />
           </div>
         </div>
         <footer className="mt-10 flex flex-wrap justify-between gap-2 border-t border-slate-200 pt-5 text-xs text-slate-400">
