@@ -6,6 +6,7 @@ import { ErrorMessage, Loader } from './components/Feedback'
 import SearchForm from './components/SearchForm'
 import BrandSelector from './components/BrandSelector'
 import SearchResults from './components/SearchResults'
+import { FishCursorTrail } from './components/aquarium/FishCursorTrail'
 
 export default function App() {
   const config = useGetConfigQuery()
@@ -52,7 +53,7 @@ function SearchPage({ demo }) {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
+      <header className="relative z-2 border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
           <a href="/" aria-label="ЮРАЛ — на главную" className="flex items-center gap-3">
             <span
@@ -78,8 +79,8 @@ function SearchPage({ demo }) {
       </header>
 
       <main className="mx-auto max-w-7xl px-5 pb-16 pt-10 sm:px-8 sm:pt-14">
-        <div className="mb-9 flex flex-wrap items-end justify-between gap-6">
-          <div>
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-x-5 gap-y-2">
+          <div className="relative z-2">
             <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-700">
               Подбор по артикулу
             </p>
@@ -90,22 +91,22 @@ function SearchPage({ demo }) {
               Найдите нужную деталь, сравните аналоги и предложения складов.
             </p>
           </div>
-          <div
-            aria-label="Этапы поиска"
-            className="flex items-center gap-3 pb-1 text-xs text-slate-400"
-          >
-            <span className="font-medium text-slate-800">01 Артикул</span>
-            <span aria-hidden="true">/</span>
-            <span className={manufacturers?.length ? 'font-medium text-slate-800' : ''}>
-              02 Бренд
-            </span>
-            <span aria-hidden="true">/</span>
-            <span className={brand ? 'font-medium text-slate-800' : ''}>03 Предложения</span>
-          </div>
+          <FishCursorTrail />
         </div>
-
+        <div
+          aria-label="Этапы поиска"
+          className="relative z-2 mb-4 flex items-center gap-3 text-xs text-slate-400"
+        >
+          <span className="font-medium text-slate-800">01 Артикул</span>
+          <span aria-hidden="true">/</span>
+          <span className={manufacturers?.length ? 'font-medium text-slate-800' : ''}>
+            02 Бренд
+          </span>
+          <span aria-hidden="true">/</span>
+          <span className={brand ? 'font-medium text-slate-800' : ''}>03 Предложения</span>
+        </div>
         {demo && (
-          <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200/70 bg-amber-50/70 px-4 py-3 text-xs leading-relaxed text-amber-900">
+          <div className="relative z-2 mb-6 flex items-start gap-3 rounded-xl border border-amber-200/70 bg-amber-50/70 px-4 py-3 text-xs leading-relaxed text-amber-900">
             <span aria-hidden="true" className="mt-0.5 font-mono font-bold">
               i
             </span>
@@ -115,25 +116,27 @@ function SearchPage({ demo }) {
 
         <div className="grid items-start gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
           <aside className="space-y-5">
-            <SearchForm
-              number={number}
-              onChange={(value) => dispatch(numberChanged(value))}
-              onSubmit={searchNow}
-              demo={demo}
-            />
+            <div data-fish-ignore className="relative z-2 space-y-5">
+              <SearchForm
+                number={number}
+                onChange={(value) => dispatch(numberChanged(value))}
+                onSubmit={searchNow}
+                demo={demo}
+              />
 
-            <BrandSelector
-              idle={!query}
-              loading={waiting || brands.isFetching}
-              error={brands.error}
-              manufacturers={manufacturers}
-              brand={brand}
-              onSelect={(value) => dispatch(brandSelected(value))}
-              onRetry={brands.refetch}
-            />
+              <BrandSelector
+                idle={!query}
+                loading={waiting || brands.isFetching}
+                error={brands.error}
+                manufacturers={manufacturers}
+                brand={brand}
+                onSelect={(value) => dispatch(brandSelected(value))}
+                onRetry={brands.refetch}
+              />
+            </div>
           </aside>
 
-          <div className="min-w-0">
+          <div className="relative z-2 min-w-0" data-fish-repel-zone>
             <SearchResults
               number={query}
               brand={brand}
@@ -141,7 +144,7 @@ function SearchPage({ demo }) {
             />
           </div>
         </div>
-        <footer className="mt-10 flex flex-wrap justify-between gap-2 border-t border-slate-200 pt-5 text-xs text-slate-400">
+        <footer className="relative z-2 mt-10 flex flex-wrap justify-between gap-2 border-t border-slate-200 pt-5 text-xs text-slate-400">
           <span>ЮРАЛ · Поиск автозапчастей</span>
           <span>Тестовое задание · React / Redux</span>
         </footer>

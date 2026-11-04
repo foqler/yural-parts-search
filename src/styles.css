@@ -32,6 +32,14 @@
 }
 
 @layer components {
+  .fish-control {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-orange-300 hover:text-orange-700 disabled:opacity-50;
+  }
+
+  .fish-flush {
+    @apply border-sky-200 bg-sky-50 text-sky-900 hover:border-sky-400 hover:text-sky-950;
+  }
+
   .step-number {
     @apply flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 font-mono text-xs font-medium text-slate-500;
   }
