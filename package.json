@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --env-file-if-exists=.env server/index.js",
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "dev": "npm start",
     "build": "vite build",
-    "start": "node --env-file-if-exists=.env server/index.js --production",
+    "preview": "node --env-file-if-exists=.env server/index.js --production",
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
